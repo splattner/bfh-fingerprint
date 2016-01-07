@@ -15,8 +15,8 @@ import random
 sx = [[1,0,-1],[2,0,-2],[1,0,1]]
 sy = [[1,2,1],[0,0,0],[-1,-2,-1]]
 
-factor = 5 #Enlarge Image by Factor
-windowSize = 5 # Create w x w Box
+factor = 7 #Enlarge Image by Factor    
+windowSize = 3 # Create w x w Box
 windowStep = int(math.floor(windowSize/2)) # +- for Window Size
 
 def myTan(x,y):
@@ -43,8 +43,6 @@ def getLocalOrientation(sobelx, sobely,x,y):
     gxy = 0
     
     
-    windowStep = int(math.floor(windowSize/2))
-    
     for xi in range (x-windowStep,x+windowStep):
         for yi in range (y-windowStep,y+windowStep):
             gx = sobelx[xi][yi]
@@ -55,11 +53,6 @@ def getLocalOrientation(sobelx, sobely,x,y):
             gxy += gx*gy
             
         
-    
-            
-           
-
-            
     angle = 0.5 * myTan(gxx - gyy, 2 * gxy)
     
     if (angle <= 0):
@@ -88,14 +81,14 @@ def getLocalOrientation(sobelx, sobely,x,y):
     
 def drawLine(angle, x,y, draw):
     # Draw Boxes
-    draw.line((x*factor, (y)*factor, (x+windowSize)*factor, (y)*factor), fill="green")
-    draw.line((x*factor, (y+windowSize)*factor, (x+windowSize)*factor, (y+windowSize)*factor), fill="green")
+    draw.line((x*factor, (y)*factor, (x+windowSize)*factor, (y)*factor), fill="blue")
+    draw.line((x*factor, (y+windowSize)*factor, (x+windowSize)*factor, (y+windowSize)*factor), fill="blue")
     
     draw.line((x*factor, (y)*factor, (x)*factor, (y+windowSize)*factor), fill="blue")
     draw.line(((x+windowSize)*factor, (y)*factor, (x+windowSize)*factor, (y+windowSize)*factor), fill="blue")
     
-    #if (angle*180/math.pi != -90):
-    if (angle != 0):
+    if (angle*180/math.pi != 90):
+    #if (angle != 0):
 
         # Draw Line with angle
         linelenght = windowSize * factor / 1.5
@@ -105,6 +98,9 @@ def drawLine(angle, x,y, draw):
         endy = math.ceil(starty + linelenght * math.cos(angle))
 
         draw.line((startx,starty,endx,endy),fill="red",width=2)
+        draw.rectangle([(startx-1,starty-1), (startx+1,starty+1)], fill="green")
+        
+        
 
 def main(argv):
     
@@ -140,8 +136,8 @@ def main(argv):
     
 
     # Draw Area for Orientation lines
-    fp = Image.new("RGB", (width*factor, height*factor), "white")
-    #fp = im.resize((width*factor, height*factor))
+    #fp = Image.new("RGB", (width*factor, height*factor), "white")
+    fp = im.resize((width*factor, height*factor))
     draw = ImageDraw.Draw(fp)
     
     
@@ -180,7 +176,7 @@ def main(argv):
             tempy += sy[2][1] * pixelsMean[x][y+1]
             tempy += sy[2][2] * pixelsMean[x+1][y+1]
             
-            '''
+            
             if (tempx == tempy):
                 if(bool(random.getrandbits(1))):
                     if(bool(random.getrandbits(1))):
@@ -204,7 +200,7 @@ def main(argv):
                     tempy += 1
                 else:
                     tempy -= 1
-            '''    
+                
             
             sobelx[x][y] = tempx
             sobely[x][y] = tempy
@@ -221,7 +217,7 @@ def main(argv):
             color = 0.0
             color = int(math.ceil(sobel / maxSobel * 255))
 
-            draw.rectangle([(x*factor,y*factor), ((x+1)*factor,(y+1)*factor)], fill=(color,color,color))
+            #draw.rectangle([(x*factor,y*factor), ((x+1)*factor,(y+1)*factor)], fill=(color,color,color))
             
     
     # Get Orientation based on Sobel Gradients in a w x w Window
