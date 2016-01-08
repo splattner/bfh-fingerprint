@@ -1,8 +1,6 @@
 
 from PIL import Image, ImageDraw, ImageEnhance
 import numpy as np
-import scipy as sp
-import pylab as pl
 
 
 import math
@@ -16,8 +14,9 @@ sx = [[1,0,-1],[2,0,-2],[1,0,1]]
 sy = [[1,2,1],[0,0,0],[-1,-2,-1]]
 
 factor = 7 #Enlarge Image by Factor    
-windowSize = 3 # Create w x w Box
+windowSize = 4 # Create w x w Box
 windowStep = int(math.floor(windowSize/2)) # +- for Window Size
+overlap = 0
 
 def myTan(x,y):
     
@@ -81,24 +80,20 @@ def getLocalOrientation(sobelx, sobely,x,y):
     
 def drawLine(angle, x,y, draw):
     # Draw Boxes
-    draw.line((x*factor, (y)*factor, (x+windowSize)*factor, (y)*factor), fill="blue")
-    draw.line((x*factor, (y+windowSize)*factor, (x+windowSize)*factor, (y+windowSize)*factor), fill="blue")
-    
-    draw.line((x*factor, (y)*factor, (x)*factor, (y+windowSize)*factor), fill="blue")
-    draw.line(((x+windowSize)*factor, (y)*factor, (x+windowSize)*factor, (y+windowSize)*factor), fill="blue")
-    
-    if (angle*180/math.pi != 90):
-    #if (angle != 0):
+    draw.line(((x-windowStep)*factor, (y-windowStep)*factor, (x+windowStep)*factor, (y-windowStep)*factor), fill="blue")
+    draw.line(((x-windowStep)*factor, (y+windowStep)*factor, (x+windowStep)*factor, (y+windowStep)*factor), fill="green")
+    draw.line(((x-windowStep)*factor, (y-windowStep)*factor, (x-windowStep)*factor, (y+windowStep)*factor), fill="blue")
+    draw.line(((x+windowStep)*factor, (y-windowStep)*factor, (x+windowStep)*factor, (y+windowStep)*factor), fill="green")
 
-        # Draw Line with angle
-        linelenght = windowSize * factor / 1.5
-        startx = (x+1) * factor + (factor / 2)
-        starty = (y+1) * factor + (factor / 2)
-        endx = math.ceil(startx + linelenght * math.sin(angle))
-        endy = math.ceil(starty + linelenght * math.cos(angle))
+    # Draw Line with angle
+    linelenght = windowSize * factor / 1.5
+    startx = (x) * factor
+    starty = (y) * factor
+    endx = math.ceil(startx + linelenght * math.sin(angle))
+    endy = math.ceil(starty + linelenght * math.cos(angle))
 
-        draw.line((startx,starty,endx,endy),fill="red",width=2)
-        draw.rectangle([(startx-1,starty-1), (startx+1,starty+1)], fill="green")
+    draw.line((startx,starty,endx,endy),fill="red",width=2)
+    draw.rectangle([(startx-1,starty-1), (startx+1,starty+1)], fill="green")
         
         
 
@@ -119,7 +114,7 @@ def main(argv):
     im_original = Image.open(inputfile)
     
     enh = ImageEnhance.Contrast(im_original)
-    im_original = enh.enhance(1)
+    im_original = enh.enhance(2)
     
     im = im_original.convert('RGB')
     pixels = im.load() 
@@ -142,7 +137,7 @@ def main(argv):
     
     
 
-    # Calculate full Sobel
+    # Calculate gradient with Sobel for all Pixels
     sobelx = [[0 for y in range(height)] for x in range(width)]
     sobely = [[0 for y in range(height)] for x in range(width)]
     
@@ -201,7 +196,7 @@ def main(argv):
                 else:
                     tempy -= 1
                 
-            
+           
             sobelx[x][y] = tempx
             sobely[x][y] = tempy
         
@@ -221,8 +216,8 @@ def main(argv):
             
     
     # Get Orientation based on Sobel Gradients in a w x w Window
-    for x in xrange(windowStep, width - windowStep, windowSize):
-        for y in xrange(windowStep, height - windowStep, windowSize):
+    for x in xrange(windowStep, width - windowStep, windowSize-overlap):
+        for y in xrange(windowStep, height - windowStep, windowSize-overlap):
             angle = getLocalOrientation(sobelx, sobely, x, y)
             drawLine(angle,x,y, draw)
 
